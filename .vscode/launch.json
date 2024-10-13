@@ -6,8 +6,8 @@
       "type": "lldb",
       "request": "launch",
       "args": [],
-      "cwd": "/Users/mzeggaf/Desktop/cub3d",
-      "program": "/Users/mzeggaf/Desktop/cub3d/build/Debug/outDebug"
+      "cwd": "/Users/mzeggaf/moraba3",
+      "program": "/Users/mzeggaf/moraba3/build/Debug/outDebug"
     }
   ]
 }

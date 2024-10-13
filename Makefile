@@ -9,7 +9,7 @@ NAME = cub3d
 SRC_DIR = src/
 OBJ_DIR = obj/
 
-RAW_FILES = main.c
+RAW_FILES = main.c draw.c
 FILES = $(addprefix $(SRC_DIR), $(RAW_FILES))
 OBJ = $(addprefix $(OBJ_DIR), $(RAW_FILES:.c=.o))
 
@@ -24,7 +24,17 @@ libft:
 $(NAME): $(OBJ) $(HEADERS)
 	@$(CC) $(FLAGS) $(INCLUDES) -o $(NAME) $(OBJ) $(LIBFT) $(GNL_FILES) -lmlx -framework OpenGL -framework AppKit
 
-$(OBJ_DIR)%.o: $(SRC_DIR)%.c
+$(OBJ_DIR)%.o: $(SRC_DIR)%.c $(HEADERS)
 	@$(CC) $(FLAGS) $(INCLUDES) -c $< -o $@
+
+clean:
+	rm -rf $(OBJ_DIR)
+	@make -C libft clean
+
+fclean: clean
+	rm -f $(NAME)
+	@make -C libft fclean
+
+re: fclean all
 
 .PHONY: all libft clean fclean re

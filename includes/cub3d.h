@@ -1,14 +1,5 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   cub3d.h                                            :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: mzeggaf <mzeggaf@student.42.fr>            +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/10/02 20:01:47 by mzeggaf           #+#    #+#             */
-/*   Updated: 2024/10/04 16:59:44 by mzeggaf          ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
+
+
 
 #ifndef PARSE_H
 # define PARSE_H
@@ -25,14 +16,7 @@
 # define W_WIDTH 1920
 # define W_HEIGHT 1080
 
-# define BLOCK_SIZE 69
-
-# define UPPER_HEX "0123456789ABCDEF"
-# define LOWER_HEX "0123456789abcdef"
-
-# define ISOMETRIC "Isometric"
-# define ELEVATION "Elevation"
-# define PLAN "Plan"
+# define BLOCK_SIZE 30
 
 # define MOUSE_LEFT 1
 # define MOUSE_RIGHT 2
@@ -77,6 +61,9 @@
 # define KEY_P 35
 # define KEY_I 34
 
+# define DIR_LEN 50
+# define PLANE_LEN 1080
+
 typedef struct s_image
 {
 	void	*img;
@@ -97,9 +84,43 @@ typedef struct s_block
 {
 	int		x;
 	int		y;
-	int		size;
+	int		height;
+	int		width;
+	int		color;
 	int		wall;
 }	t_block;
+
+typedef enum e_hit_direction
+{
+  HORIZONTAL,
+  VERTICAL,
+  NONE
+} t_hitdir;
+
+typedef struct s_point
+{
+	float	x;
+	float	y;
+	int		color;
+}	t_point;
+
+/* a point in map (not in img) */
+typedef struct s_hitwall
+{
+  int x;
+  int y;
+  int side;
+} t_hitwall;
+
+typedef struct s_vector
+{
+	t_point	a;
+	t_point	b;
+	float	dx;
+	int		rev;
+	int		vert;
+	float	step;
+}	t_vector;
 
 typedef struct s_map
 {
@@ -116,6 +137,12 @@ typedef struct s_player
 	int		angle;
 }	t_player;
 
+typedef struct s_vector_
+{
+  double x;
+  double y;
+} t_vector_;
+
 typedef struct s_env
 {
 	void		*mlx;
@@ -124,7 +151,13 @@ typedef struct s_env
 	t_image		img;
 	t_map		map;
 	t_player	player;
+  t_vector_ dirVec;
+  t_vector_ planeVec;
 }	t_env;
 
+
+// helpers
+void	ft_aa_draw(t_point *a, t_point *b, t_image *img, int color);
+void	ft_put_pixel(int x, int y, int color, t_image *img);
 
 #endif
