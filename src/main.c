@@ -1,29 +1,6 @@
 
 #include "cub3d.h"
 
-// char	**read_map(char *filename)
-// {
-// 	int		fd;
-// 	char	*line;
-// 	char	**map;
-
-// 	fd = open(filename, O_RDONLY);
-// 	if (fd < 0)
-// 	{
-// 		ft_putstr_fd("error opening file.\n", 2);
-// 		return (NULL);
-// 	}
-// 	while (true)
-// 	{
-// 		line = get_next_line(fd);
-// 		if (!line)
-// 			break ;
-// 		free(line);
-// 		if (!map)
-// 			break ;
-// 	}
-// }
-
 void ft_exit(int code, char *msg)
 {
 	ft_putstr_fd("Error\n", 2);
@@ -99,7 +76,7 @@ int ft_get_pixel_color(int x, int y, t_image *img)
 	return (1);
 }
 
-void ft_paint_block(t_block *block, t_env *env)
+void ft_paint_block(t_block *block, int color, t_env *env)
 {
 	int h;
 	int w;
@@ -111,10 +88,10 @@ void ft_paint_block(t_block *block, t_env *env)
 		while (w < block->width)
 		{
 			// TODO: this adds the red lines grid, maybe remove later
-			// if (w == 0 || h == 0)
-			// 	ft_put_pixel(w + block->x, h + block->y, 0xFF0000, &env->img);
-			// else
-				ft_put_pixel(w + block->x, h + block->y, block->color * block->wall, &env->img);
+			if (w == 0 || h == 0)
+				ft_put_pixel(w + block->x, h + block->y, 0x808080, &env->img);
+			else
+				ft_put_pixel(w + block->x, h + block->y, color, &env->img);
 			w += 1;
 		}
 		h += 1;
@@ -123,47 +100,98 @@ void ft_paint_block(t_block *block, t_env *env)
 
 void draw_map(t_env *env)
 {
+	t_block	block;
 	t_map *map = &env->map;
-	int h = env->player.y / BLOCK_SIZE;
-	int w = env->player.x / BLOCK_SIZE;
+	t_point map_pos;
+	t_point map_offset;
+	map_pos.x = env->player.x / BLOCK_SIZE;
+	map_pos.y = env->player.y / BLOCK_SIZE;
+	map_offset.x = env->player.x % BLOCK_SIZE;
+	map_offset.y = env->player.y % BLOCK_SIZE;
+	// if (map_offset.x > BLOCK_SIZE / 2)
+	// 	map_offset.x = BLOCK_SIZE - map_offset.x;
+	// if (map_offset.y > BLOCK_SIZE / 2)
+	// 	map_offset.y = BLOCK_SIZE - map_offset.y;
+	printf("x: %d, y: %d\n", env->player.x, env->player.y);
+	printf("offx: %f, offy: %f\n", map_offset.x, map_offset.y);
+	int start_h;
+	int start_w;
+	int end_h;
+	int end_w;
 
-	while (h < map->height)
+	env->map.x = 0;
+	env->map.y = 0;
+	if ((map_pos.y - MINIMAP_BLOCKS / 2) >= 0)
+		start_h = map_pos.y - MINIMAP_BLOCKS / 2;
+	else
 	{
-		w = 0;
-		while (w < map->width)
-		{
-			ft_paint_block(&map->blocks[h][w], env);
-			w += 1;
-		}
-		h += 1;
+		start_h = 0;
+		env->map.y = (map_pos.y - MINIMAP_BLOCKS / 2) * BLOCK_SIZE + map_offset.y;
+		map_offset.y = 0;
 	}
-}
-
-void draw_circule(int x, int y, int color, t_env *env)
-{
-	double i = 0;
-	double angle;
-	double x1;
-	double x2;
-	double y1;
-	double r = 5;
-
-	while (i < 360)
+	if ((map_pos.x - MINIMAP_BLOCKS / 2) >= 0)
+		start_w = map_pos.x - MINIMAP_BLOCKS / 2;
+	else
 	{
-		angle = i;
-		x1 = r * cos(angle * M_PI / 180);
-		y1 = r * sin(angle * M_PI / 180);
-		x2 = round(x + x1);
-		while (x2 != round(x))
+		start_w = 0;
+		env->map.x = (map_pos.x - MINIMAP_BLOCKS / 2) * BLOCK_SIZE + map_offset.x;
+		map_offset.x = 0;
+	}
+
+	if (start_h + MINIMAP_BLOCKS + 1 < map->height)
+		end_h = start_h + MINIMAP_BLOCKS + 1;
+	else
+	{
+		end_h = map->height;
+		start_h = map->height - MINIMAP_BLOCKS - 1;
+		env->map.y = (start_h + MINIMAP_BLOCKS + 1 - map->height) * BLOCK_SIZE + map_offset.y;
+		map_offset.y = 0;
+	}
+	if (start_w + MINIMAP_BLOCKS + 1 < map->width)
+		end_w = start_w + MINIMAP_BLOCKS + 1;
+	else
+	{
+		end_w = map->width;
+		start_w = map->width - MINIMAP_BLOCKS - 1;
+		env->map.x = (start_h + MINIMAP_BLOCKS + 1 - map->width) * BLOCK_SIZE + map_offset.x;
+		map_offset.x = 0;
+	}
+
+	int j;
+	int i = 0;
+	int h = BLOCK_SIZE;
+	int w = BLOCK_SIZE;
+	block = (t_block){1, 1, MINIMAP_BLOCKS * BLOCK_SIZE, MINIMAP_BLOCKS * BLOCK_SIZE};
+	ft_paint_block(&block, 0xFF0000, env);
+	while (start_h + i < end_h)
+	{
+		j = 0;
+		while (start_w + j < end_w)
 		{
-			ft_put_pixel(x2, round(y + y1), color, &env->img);
-			if (x2 < round(x))
-				x2 += 1;
-			else
-				x2 -= 1;
+			h = BLOCK_SIZE;
+			w = BLOCK_SIZE;
+			int x = j * BLOCK_SIZE - map_offset.x;
+			int y = i * BLOCK_SIZE - map_offset.y;
+			if (i == 0)
+			{
+				h = BLOCK_SIZE - map_offset.y;
+				y = 0;
+			}
+			else if (i == end_h - start_h - 1)
+				h = map_offset.y;
+			if (j == 0)
+			{
+				w = BLOCK_SIZE - map_offset.x;
+				x = 0;
+			}
+			else if (j == end_w - start_w - 1)
+				w = map_offset.x;
+			printf("x: %d, y: %d\n", x, y);
+			block = (t_block){x, y, w, h};
+			ft_paint_block(&block, map->blocks[start_h + i][start_w + j] * 0xFFFFFF, env);
+			j++;
 		}
-		ft_put_pixel(x2, round(y + y1), color, &env->img);
-		i += 0.1f;
+		i++;
 	}
 }
 
@@ -175,34 +203,29 @@ void draw_player(t_env *env)
 	double x2;
 	double y1;
 	double r = BLOCK_SIZE / 10;
-
+	t_point player = {(MINIMAP_BLOCKS / 2) * BLOCK_SIZE, (MINIMAP_BLOCKS / 2) * BLOCK_SIZE, 0xFF0000};
+	if (env->map.x || env->map.y)
+	{
+		player.x = player.x + env->map.x;
+		player.y = player.y + env->map.y;
+	}
 	while (i < 360)
 	{
 		angle = i;
 		x1 = r * cos(angle * M_PI / 180);
 		y1 = r * sin(angle * M_PI / 180);
-		x2 = round(env->player.x + x1);
-		while (x2 != round(env->player.x))
+		x2 = round(player.x + x1);
+		while (x2 != round(player.x))
 		{
-			ft_put_pixel(x2, round(env->player.y + y1), 0xFFFFFF, &env->img);
-			if (x2 < round(env->player.x))
+			ft_put_pixel(x2, round(player.y + y1), 0xFFFFFF, &env->img);
+			if (x2 < round(player.x))
 				x2 += 1;
 			else
 				x2 -= 1;
 		}
-		ft_put_pixel(x2, round(env->player.y + y1), 0xFFFFFF, &env->img);
+		ft_put_pixel(x2, round(player.y + y1), 0xFFFFFF, &env->img);
 		i += 0.1f;
 	}
-}
-
-int draw_direction(t_env *env)
-{
-	// initial direction
-	t_point x = {env->player.x, env->player.y, 0xFFFFFF};
-	t_point y = {env->player.x + (1 * env->dirVec.x), env->player.y + (1 * env->dirVec.y), 0xFFFFFF};
-
-	ft_aa_draw(&x, &y, &env->img, 0xFF0000);
-	return (0);
 }
 
 double vector_length(t_vector_ a)
@@ -216,34 +239,17 @@ void convert_to_unit_vector(t_vector_ *u)
 	u->y = u->y / vector_length(*u);
 }
 
-int point_in_wall(t_point p, t_env *env, t_hitdir hit, t_vector_ *rayDir)
+t_point get_hit_point(t_player *player, t_hitwall hit, t_vector_ rayDir)
 {
-	(void)hit;
-	(void)rayDir;
-	/*
-	if (hit == HORIZONTAL)
-	  p.x += rayDir->x < 0 ? -(BLOCK_SIZE / 2) : (BLOCK_SIZE / 2);
-	else if (hit == VERTICAL)
-	  p.y += rayDir->y < 0 ? (BLOCK_SIZE / 2) : -(BLOCK_SIZE / 2);
-	*/
-
-	int x = (int)(p.x / BLOCK_SIZE);
-	int y = (int)(p.y / BLOCK_SIZE);
-	return (env->map.blocks[y][x].wall);
-}
-
-// given the wall coordinates, return the point in wall that ray hits
-t_point get_hit_point(t_env *env, t_hitwall hit, t_vector_ rayDir)
-{
+	t_point result;
 	int x;
 	int y;
-	t_point result;
 
-	x = abs(hit.x * BLOCK_SIZE - env->player.x) < abs((hit.x + 1) * BLOCK_SIZE - env->player.x) ? hit.x * BLOCK_SIZE : (hit.x + 1) * BLOCK_SIZE;
-	y = abs(hit.y * BLOCK_SIZE - env->player.y) < abs((hit.y + 1) * BLOCK_SIZE - env->player.y) ? hit.y * BLOCK_SIZE : (hit.y + 1) * BLOCK_SIZE;
+	x = abs(hit.x * BLOCK_SIZE - (int)player->x) < abs((hit.x + 1) * BLOCK_SIZE - (int)player->x) ? hit.x * BLOCK_SIZE : (hit.x + 1) * BLOCK_SIZE;
+	y = abs(hit.y * BLOCK_SIZE - (int)player->y) < abs((hit.y + 1) * BLOCK_SIZE - (int)player->y) ? hit.y * BLOCK_SIZE : (hit.y + 1) * BLOCK_SIZE;
 
 	double m = rayDir.y / rayDir.x;
-	double c = env->player.y - m * env->player.x;
+	double c = (int)player->y - m * (int)player->x;
 	if (hit.side == 0)
 	{
 		result.x = x;
@@ -257,7 +263,7 @@ t_point get_hit_point(t_env *env, t_hitwall hit, t_vector_ rayDir)
 	return (result);
 }
 
-t_hitwall dda(t_env *env, double deltax, double deltay, t_vector_ rayDir, t_point *side)
+t_hitwall dda(t_env *env, t_point *delta, t_vector_ rayDir, t_point *side)
 {
 	t_hitwall current;
 	int stepx;
@@ -273,28 +279,26 @@ t_hitwall dda(t_env *env, double deltax, double deltay, t_vector_ rayDir, t_poin
 	{
 		if (side->x < side->y)
 		{
-			side->x += deltax;
+			side->x += delta->x;
 			current.x += stepx;
 			current.side = 0;
 		}
 		else
 		{
-			side->y += deltay;
+			side->y += delta->y;
 			current.y += stepy;
 			current.side = 1;
 		}
 		if ((int)current.y >= env->map.height || \
 			(int)current.x >= env->map.width || \
 			(int)current.x < 0 || (int)current.y < 0 || \
-			env->map.blocks[(int)current.y][(int)current.x].wall)
+			env->map.blocks[(int)current.y][(int)current.x])
 			return (current);
 	}
 }
 
 int draw_minimap(t_env *env)
 {
-	t_point player = {env->player.x, env->player.y, 0xFFFFFF};
-
 	draw_map(env);
 	draw_player(env);
 	for (int i = 0; i < W_WIDTH; i++)
@@ -315,10 +319,19 @@ int draw_minimap(t_env *env)
 		else
 			initstepy = deltay * ((BLOCK_SIZE - env->player.y % BLOCK_SIZE) / (double)BLOCK_SIZE);
 
+		t_point delta = {deltax, deltay, 0x008000};
 		t_point side = {initstepx, initstepy, 0x008000};
-		t_hitwall wall = dda(env, deltax, deltay, rayDir, &side);
-		t_point x = get_hit_point(env, wall, rayDir);
-		ft_aa_draw(&player, &x, &env->img, 0x008000);
+		t_hitwall wall = dda(env, &delta, rayDir, &side);
+		t_point x = get_hit_point(&env->player, wall, rayDir);
+		t_player player = {MINIMAP_SIZE / 2, MINIMAP_SIZE / 2, 0};
+		if (env->map.x || env->map.y)
+		{
+			player.x = player.x + env->map.x;
+			player.y = player.y + env->map.y;
+		}
+		x.x -= env->player.x - player.x;
+		x.y -= env->player.y - player.y;
+		ft_aa_draw(&(t_point){player.x, player.y, 0xFFFFFF}, &x, &env->img, 0x008000);
 	}
 	return (0);
 }
@@ -327,7 +340,7 @@ int draw_camera_plane(t_env *env)
 {
 	int w = 1;
 	int h = W_HEIGHT;
-	ft_paint_block(&(t_block){0, 0, W_HEIGHT, W_WIDTH, 0, 0}, env);
+	ft_paint_block(&(t_block){0, 0, W_WIDTH, W_HEIGHT}, 0, env);
 	for (int i = 0; i < (W_WIDTH); i++)
 	{
 		double windowX = 2 * i / (double)(W_WIDTH) - 1;
@@ -346,8 +359,9 @@ int draw_camera_plane(t_env *env)
 		else
 			initstepy = deltay * ((BLOCK_SIZE - env->player.y % BLOCK_SIZE) / (double)BLOCK_SIZE);
 
+		t_point delta = {deltax, deltay, 0x008000};
 		t_point side = {initstepx, initstepy, 0x008000};
-		t_hitwall wall = dda(env, deltax, deltay, rayDir, &side);
+		t_hitwall wall = dda(env, &delta, rayDir, &side);
 
 		double perpWallDist;
 		if (wall.side == 0)
@@ -369,11 +383,10 @@ int draw_camera_plane(t_env *env)
 		block.y = drawStart;
 		block.height = (drawEnd - drawStart);
 		block.width = w;
-		block.color = 0xFFFFFF;
 		if (wall.side == 1)
-			block.color = 0xdddddd;
-		block.wall = 1;
-		ft_paint_block(&block, env);
+			ft_paint_block(&block, 0xDDDDDD, env);
+		else
+			ft_paint_block(&block, 0xFFFFFF, env);
 	}
 	return (0);
 }
@@ -385,33 +398,30 @@ void refresh(t_env *env)
 	mlx_put_image_to_window(env->mlx, env->win, env->img.img, 0, 0);
 }
 
-t_block *parse_line(char *line, t_env *env, int h)
+int *parse_line(char *line, t_env *env, int h)
 {
-	t_map *map = &env->map;
-	t_block *blocks;
+	t_map	*map = &env->map;
+	int		*blocks;
 	int i;
+	
 	if (map->width == 0)
 		map->width = ft_strlen(line);
 	else if (map->width != (int)ft_strlen(line))
 		ft_exit(5, "invalid map.\n");
-	blocks = (t_block *)malloc((map->width + 1) * sizeof(t_block));
+	blocks = (int *)malloc((map->width + 1) * sizeof(int));
 	i = 0;
 	while (i < map->width)
 	{
-		blocks[i].x = i * BLOCK_SIZE;
-		blocks[i].y = h * BLOCK_SIZE;
-		blocks[i].height = BLOCK_SIZE;
-		blocks[i].width = BLOCK_SIZE;
 		if (line[i] == '1')
-			blocks[i].wall = 1;
+			blocks[i] = 1;
 		else if (line[i] == '0')
-			blocks[i].wall = 0;
+			blocks[i] = 0;
 		else if (ft_index(line[i], "NESW") < 4)
 		{
-			env->player.x = blocks[i].x + BLOCK_SIZE / 2;
-			env->player.y = blocks[i].y + BLOCK_SIZE / 2;
+			env->player.x = BLOCK_SIZE * i;
+			env->player.y = BLOCK_SIZE * h;
 			env->player.angle = ft_index(line[i], "NESW");
-			blocks[i].wall = 0;
+			blocks[i] = 0;
 		}
 		i++;
 	}
@@ -426,6 +436,8 @@ void init_map(t_env *env)
 
 	env->map.width = 0;
 	env->map.height = 0;
+	env->map.x_offset = 0;
+	env->map.y_offset = 0;
 	fd = open(env->map.name, O_RDONLY);
 	if (fd < 0)
 		ft_exit(1, env->map.name);
@@ -439,7 +451,7 @@ void init_map(t_env *env)
 	}
 	close(fd);
 	printf("height: %d\n", env->map.height);
-	env->map.blocks = (t_block **)malloc(env->map.height * sizeof(t_block *));
+	env->map.blocks = (int **)malloc(env->map.height * sizeof(int *));
 	fd = open(env->map.name, O_RDONLY);
 	if (fd < 0)
 		ft_exit(1, env->map.name);
@@ -482,7 +494,6 @@ int ft_mouse_move(int x, int y, void *param)
 	env->planeVec.y = -env->dirVec.y;
 	draw_map(env);
 	draw_player(env);
-	draw_direction(env);
 	draw_camera_plane(env);
 	mlx_put_image_to_window(env->mlx, env->win, env->img.img, 0, 0);
 	return (1);
@@ -517,25 +528,29 @@ int ft_mlx_move(int keycode, t_env *env)
 {
 	if (keycode == KEY_A)
 	{
-		env->player.x -= 5;
+		env->player.x += env->dirVec.x * MOVE_SPEED;
+		env->player.y -= env->dirVec.y * MOVE_SPEED;
 		refresh(env);
 		return (0);
 	}
 	else if (keycode == KEY_D)
 	{
-		env->player.x += 5;
+		env->player.x -= env->dirVec.x * MOVE_SPEED;
+		env->player.y += env->dirVec.y * MOVE_SPEED;
 		refresh(env);
 		return (0);
 	}
 	else if (keycode == KEY_W)
 	{
-		env->player.y -= 5;
+		env->player.x += env->dirVec.x * MOVE_SPEED;
+		env->player.y += env->dirVec.y * MOVE_SPEED;
 		refresh(env);
 		return (0);
 	}
 	else if (keycode == KEY_S)
 	{
-		env->player.y += 5;
+		env->player.x -= env->dirVec.x * MOVE_SPEED;
+		env->player.y -= env->dirVec.y * MOVE_SPEED;
 		refresh(env);
 		return (0);
 	}
@@ -594,7 +609,6 @@ int main(int ac, char **av)
 	init_mlx(&env);
 	draw_map(&env);
 	draw_player(&env);
-	draw_direction(&env);
 	draw_camera_plane(&env);
 
 	mlx_hook(env.win, ON_KEYDOWN, 0, ft_key_event, (void *)&env);

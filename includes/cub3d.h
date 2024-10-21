@@ -16,8 +16,6 @@
 # define W_WIDTH 1920
 # define W_HEIGHT 1080
 
-# define BLOCK_SIZE 30
-
 # define MOUSE_LEFT 1
 # define MOUSE_RIGHT 2
 # define MOUSE_MIDDLE 3
@@ -62,7 +60,11 @@
 # define KEY_I 34
 
 # define DIR_LEN 50
+# define MOVE_SPEED 5
+# define BLOCK_SIZE 30
 # define PLANE_LEN 1080
+# define MINIMAP_BLOCKS 8
+# define MINIMAP_SIZE MINIMAP_BLOCKS * BLOCK_SIZE
 
 typedef struct s_image
 {
@@ -84,10 +86,8 @@ typedef struct s_block
 {
 	int		x;
 	int		y;
-	int		height;
 	int		width;
-	int		color;
-	int		wall;
+	int		height;
 }	t_block;
 
 typedef enum e_hit_direction
@@ -104,7 +104,6 @@ typedef struct s_point
 	int		color;
 }	t_point;
 
-/* a point in map (not in img) */
 typedef struct s_hitwall
 {
   int x;
@@ -126,8 +125,12 @@ typedef struct s_map
 {
 	int		width;
 	int		height;
+	int		x_offset;
+	int		y_offset;
+	int		x;
+	int		y;
 	char	*name;
-	t_block	**blocks;
+	int		**blocks;
 }	t_map;
 
 typedef struct s_player
@@ -155,8 +158,6 @@ typedef struct s_env
   t_vector_ planeVec;
 }	t_env;
 
-
-// helpers
 void	ft_aa_draw(t_point *a, t_point *b, t_image *img, int color);
 void	ft_put_pixel(int x, int y, int color, t_image *img);
 

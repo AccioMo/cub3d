@@ -52,7 +52,7 @@ static void	ft_draw_line(t_vector *v, t_image *img, int color)
 	v->dx = v->b.x - v->a.x;
 	if (v->vert)
 	{
-		while (v->a.x <= v->b.x)
+		while (v->a.x <= v->b.x && v->a.x < MINIMAP_SIZE)
 		{
 			ft_put_pixel(v->a.y, v->a.x, color, img);
 			ft_put_pixel(v->a.y + 1, v->a.x, color, img);
@@ -62,7 +62,7 @@ static void	ft_draw_line(t_vector *v, t_image *img, int color)
 	}
 	else
 	{
-		while (v->a.x <= v->b.x)
+		while (v->a.x <= v->b.x && v->a.x < MINIMAP_SIZE)
 		{
 			ft_put_pixel(v->a.x, v->a.y, color, img);
 			ft_put_pixel(v->a.x, v->a.y + 1, color, img);
