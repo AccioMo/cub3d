@@ -112,8 +112,8 @@ void draw_map(t_env *env)
 	// 	map_offset.x = BLOCK_SIZE - map_offset.x;
 	// if (map_offset.y > BLOCK_SIZE / 2)
 	// 	map_offset.y = BLOCK_SIZE - map_offset.y;
-	printf("x: %d, y: %d\n", env->player.x, env->player.y);
-	printf("offx: %f, offy: %f\n", map_offset.x, map_offset.y);
+	// printf("x: %d, y: %d\n", env->player.x, env->player.y);
+	// printf("offx: %f, offy: %f\n", map_offset.x, map_offset.y);
 	int start_h;
 	int start_w;
 	int end_h;
@@ -138,23 +138,23 @@ void draw_map(t_env *env)
 		map_offset.x = 0;
 	}
 
-	if (start_h + MINIMAP_BLOCKS + 1 < map->height)
+	if (start_h + MINIMAP_BLOCKS + 1 <= map->height)
 		end_h = start_h + MINIMAP_BLOCKS + 1;
 	else
 	{
-		end_h = map->height;
+		env->map.y = (start_h + MINIMAP_BLOCKS - map->height) * BLOCK_SIZE + map_offset.y;
 		start_h = map->height - MINIMAP_BLOCKS - 1;
-		env->map.y = (start_h + MINIMAP_BLOCKS + 1 - map->height) * BLOCK_SIZE + map_offset.y;
-		map_offset.y = 0;
+		end_h = map->height;
+		map_offset.y = BLOCK_SIZE;
 	}
-	if (start_w + MINIMAP_BLOCKS + 1 < map->width)
+	if (start_w + MINIMAP_BLOCKS + 1 <= map->width)
 		end_w = start_w + MINIMAP_BLOCKS + 1;
 	else
 	{
-		end_w = map->width;
+		env->map.x = (start_w + MINIMAP_BLOCKS - map->width) * BLOCK_SIZE + map_offset.x;
 		start_w = map->width - MINIMAP_BLOCKS - 1;
-		env->map.x = (start_h + MINIMAP_BLOCKS + 1 - map->width) * BLOCK_SIZE + map_offset.x;
-		map_offset.x = 0;
+		end_w = map->width;
+		map_offset.x = BLOCK_SIZE;
 	}
 
 	int j;
@@ -186,7 +186,7 @@ void draw_map(t_env *env)
 			}
 			else if (j == end_w - start_w - 1)
 				w = map_offset.x;
-			printf("x: %d, y: %d\n", x, y);
+			// printf("x: %d, y: %d\n", x, y);
 			block = (t_block){x, y, w, h};
 			ft_paint_block(&block, map->blocks[start_h + i][start_w + j] * 0xFFFFFF, env);
 			j++;
