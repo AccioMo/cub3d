@@ -1,5 +1,5 @@
 CC = cc
-FLAGS = -Wall -Wextra -Werror -g -fsanitize=address
+FLAGS = -Wall -Wextra -Werror #-g -fsanitize=address
 INCLUDES = -I ./includes -I ./libft -I ./mlx -I ./gnl
 HEADERS = includes/cub3d.h
 GNL_FILES = gnl/get_next_line.c gnl/get_next_line_utils.c
@@ -9,7 +9,7 @@ NAME = cub3d
 SRC_DIR = src/
 OBJ_DIR = obj/
 
-RAW_FILES = main.c draw.c
+RAW_FILES = main.c draw.c mlx.c parse.c end.c utils.c minimap.c
 FILES = $(addprefix $(SRC_DIR), $(RAW_FILES))
 OBJ = $(addprefix $(OBJ_DIR), $(RAW_FILES:.c=.o))
 

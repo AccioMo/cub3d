@@ -6,7 +6,7 @@
 /*   By: mzeggaf <mzeggaf@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/04 18:02:01 by mzeggaf           #+#    #+#             */
-/*   Updated: 2024/10/09 23:39:47 by ayait-el         ###   ########.fr       */
+/*   Updated: 2024/10/23 16:21:39 by mzeggaf          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ static void	ft_swap(float *a, float *b)
 	*b = c;
 }
 
-static float	ft_get_step(t_vector *vector)
+static float	ft_get_step(t_line *vector)
 {
 	float	dx;
 	float	dy;
@@ -45,7 +45,7 @@ static float	ft_get_step(t_vector *vector)
 	return (dy / dx);
 }
 
-static void	ft_draw_line(t_vector *v, t_image *img, int color)
+static void	ft_draw_line(t_line *v, t_image *img, int color)
 {
 	//int	c;
 
@@ -72,35 +72,44 @@ static void	ft_draw_line(t_vector *v, t_image *img, int color)
 	}
 }
 
-/*
-static int	ft_in_screen(t_point *a, t_point *b)
+void ft_put_pixel(int x, int y, int color, t_image *img)
 {
-	float	m;
-	float	y;
-	float	x;
+	char *dst;
 
-	m = (b->y - a->y) / (b->x - a->x);
-	y = m * (W_WIDTH - a->x) + a->y;
-	if ((b->x - a->x) == 0)
-		m = 1;
-	if (y >= 0 && y <= W_HEIGHT)
-		return (1);
-	y = m * (0 - a->x) + a->y;
-	if (y >= 0 && y <= W_HEIGHT)
-		return (1);
-	x = (W_HEIGHT - a->y) / m + a->x;
-	if (x >= 0 && x <= W_WIDTH)
-		return (1);
-	x = (0 - a->y) / m + a->x;
-	if (x >= 0 && x <= W_WIDTH)
-		return (1);
-	return (0);
+	if ((0 <= x && x < W_WIDTH) && (0 <= y && y < W_HEIGHT))
+	{
+		x *= (img->bpp / 8);
+		y *= img->n_bytes;
+		dst = img->addr + x + y;
+		*(unsigned int *)dst = color;
+	}
 }
-*/
+
+void ft_paint_block(t_block *block, int color, t_env *env)
+{
+	int h;
+	int w;
+
+	h = 0;
+	while (h < block->height)
+	{
+		w = 0;
+		while (w < block->width)
+		{
+			// TODO: this adds the red lines grid, maybe remove later
+			// if (w == 0 || h == 0)
+			// 	ft_put_pixel(w + block->x, h + block->y, 0x808080, &env->img);
+			// else
+				ft_put_pixel(w + block->x, h + block->y, color, &env->img);
+			w += 1;
+		}
+		h += 1;
+	}
+}
 
 void	ft_aa_draw(t_point *a, t_point *b, t_image *img, int color)
 {
-	t_vector	vct;
+	t_line	vct;
 
 	vct.a = *a;
 	vct.b = *b;
@@ -111,4 +120,28 @@ void	ft_aa_draw(t_point *a, t_point *b, t_image *img, int color)
 	// 	return ;
 	vct.step = ft_get_step(&vct);
 	ft_draw_line(&vct, img, color);
+	// int dx;
+    // int dy;
+    // int steps;
+    // int i;
+    // float x_inc;
+    // float y_inc;
+    // float x;
+    // float y;
+
+    // dx = b->x - a->x;
+    // dy = b->y - a->y;
+    // steps = fmax(abs(dx), abs(dy));
+    // x_inc = dx / (float)steps;
+    // y_inc = dy / (float)steps;
+    // x = a->x;
+    // y = a->y;
+    // i = 0;
+    // while (i <= steps)
+    // {
+    //     ft_put_pixel(x, y, color, img);
+    //     x += x_inc;
+    //     y += y_inc;
+    //     i++;
+    // }
 }
