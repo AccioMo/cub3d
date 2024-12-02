@@ -5,105 +5,136 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: mzeggaf <mzeggaf@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/10/23 15:42:28 by mzeggaf           #+#    #+#             */
-/*   Updated: 2024/10/23 16:15:07 by mzeggaf          ###   ########.fr       */
+/*   Created: 2024/11/23 19:41:06 by mzeggaf           #+#    #+#             */
+/*   Updated: 2024/12/02 19:46:39 by mzeggaf          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "cub3d.h"
 
-static int *parse_line(char *line, t_env *env, int h)
+// TODO: when only the map are provided it is a segfault
+// TODO: when the file do not exist it segfaults
+// TODO: player position is not working (NWSE)
+
+static char	parse_character(char c, t_env *env, int i, int h)
 {
-	t_map	*map = &env->map;
-	int		*blocks;
-	int i;
-	
-	blocks = (int *)malloc((map->width + 1) * sizeof(int));
+	if (ft_index(c, "NESW") < 4)
+	{
+		env->player.x = i + 0.5;
+		env->player.y = h + 0.5;
+		env->player.angle = ft_index(c, "NESW");
+		return ('0');
+	}
+	else if (c == 'F')
+	{
+		env->sp.x = i + 0.5;
+		env->sp.y = h + 0.5;
+		return ('0');
+	}
+	else
+		return (c);
+}
+
+static char	*parse_line(char *line, t_env *env, int h)
+{
+	t_map	*map;
+	char	*blocks;
+	int		i;
+
+	map = &env->map;
+	blocks = (char *)malloc((map->width + 1) * sizeof(char));
 	if (!blocks)
 		ft_exit(3, "error allocating memory.\n");
 	i = 0;
 	while (i < map->width)
 	{
-		if (line[i] == '1')
-			blocks[i] = 1;
-		else if (line[i] == '0')
-			blocks[i] = 0;
-		else if (ft_index(line[i], "NESW") < 4)
+		if (*line)
 		{
-			printf("player: %c\n", line[i]);
-			env->player.x = BLOCK_SIZE * i;
-			env->player.y = BLOCK_SIZE * h;
-			env->player.angle = ft_index(line[i], "NESW");
-			blocks[i] = 0;
+			blocks[i] = parse_character(*line, env, i, h);
+			line++;
 		}
 		else
-			break;
+			blocks[i] = '1';
 		i++;
 	}
 	return (blocks);
 }
 
-static void	ft_map_check(char *line, t_env *env)
+static void	init_map_data(t_env *env, char **lines)
 {
-	int w;
+	char	*line;
+	int		h;
 
-	w = ft_strlen(line);
-	w -= (line[w - 1] == '\n');
-	if (env->map.width == 0)
-		env->map.width = w;
-	else if (w != env->map.width)
-	{
-		printf("width: %d\n", w);
-		env->map.width = w;
-		if (w == 1 && line[0] == '\n')
-			return ;
-		ft_exit(5, "map width inconsistent.\n");
-	}
-	env->map.width = w;
-}
-
-void init_map(t_env *env)
-{
-	char *line;
-	int fd;
-	int h;
-
-	env->map.width = 0;
-	env->map.height = 0;
-	env->map.x_offset = 0;
-	env->map.y_offset = 0;
-	fd = open(env->map.name, O_RDONLY);
-	if (fd < 0)
-		ft_exit(1, env->map.name);
-	while (1)
-	{
-		line = get_next_line(fd);
-		if (!line)
-			break;
-		ft_map_check(line, env);
-		free(line);
-		env->map.height++;
-	}
-	close(fd);
-	if (env->map.height <= MINIMAP_BLOCKS)
-		ft_exit(5, "minimap size incompatible with map height: change MINIMAP_BLOCKS.\n");
-	else if (env->map.width <= MINIMAP_BLOCKS)
-		ft_exit(5, "minimap size incompatible with map height: change MINIMAP_SIZE.\n");
-	printf("height: %d\n", env->map.height);
-	env->map.blocks = (int **)malloc(env->map.height * sizeof(int *));
+	h = 0;
+	env->map.height = arr_len(lines);
+	env->map.width = get_map_width(lines);
+	env->map.blocks = (char **)malloc(env->map.height * sizeof(char *));
 	if (!env->map.blocks)
 		ft_exit(3, "error allocating memory.\n");
-	fd = open(env->map.name, O_RDONLY);
-	if (fd < 0)
-		ft_exit(1, env->map.name);
-	h = 0;
 	while (1)
 	{
-		line = get_next_line(fd);
+		line = lines[h];
 		if (!line)
-			break;
+			break ;
 		env->map.blocks[h] = parse_line(line, env, h);
-		free(line);
 		h++;
 	}
+}
+
+static int	parse_map_info(char **lines, t_env *env)
+{
+	char	*line;
+	int		i;
+
+	i = 0;
+	while (lines[i])
+	{
+		line = ft_strtrim(lines[i], " \n");
+		if (!ft_strncmp(line, "NO ", 3))
+			env->no_path = ft_strtrim(&line[3], " ");
+		else if (!ft_strncmp(line, "SO ", 3))
+			env->so_path = ft_strtrim(&line[3], " ");
+		else if (!ft_strncmp(line, "WE ", 3))
+			env->we_path = ft_strtrim(&line[3], " ");
+		else if (!ft_strncmp(line, "EA ", 3))
+			env->ea_path = ft_strtrim(&line[3], " ");
+		else if (!ft_strncmp(line, "F ", 2) || !ft_strncmp(line, "C ", 2))
+			parse_cfcolor(env, line);
+		else if (line[0] != '\0')
+			break ;
+		free(line);
+		line = NULL;
+		i++;
+	}
+	free(line);
+	return (i);
+}
+
+void	parse_params(t_env *env)
+{
+	char	**lines;
+	int		i;
+	int		j;
+	int		h;
+
+	lines = get_lines(env);
+	trim_lines(lines);
+	i = parse_map_info(lines, env);
+	check_if_start_of_map(lines[i]);
+	trim_empty_lines(lines + i);
+	check_map_lines(lines + i);
+	init_map_data(env, lines + i);
+	j = 0;
+	while (j < env->map.height)
+	{
+		h = 0;
+		while (h < env->map.width)
+		{
+			if (env->map.blocks[j][h] == '0')
+				flood_fill(env, lines + i, h, j);
+			h++;
+		}
+		j++;
+	}
+	free_arr(lines);
 }

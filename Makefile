@@ -4,12 +4,16 @@ INCLUDES = -I ./includes -I ./libft -I ./mlx -I ./gnl
 HEADERS = includes/cub3d.h
 GNL_FILES = gnl/get_next_line.c gnl/get_next_line_utils.c
 LIBFT = libft/libft.a
+MLX = mlx/libmlx.a
 NAME = cub3d
 
 SRC_DIR = src/
 OBJ_DIR = obj/
 
-RAW_FILES = main.c draw.c mlx.c parse.c end.c utils.c minimap.c
+RAW_FILES = main.c draw.c mlx.c parse.c end.c utils.c minimap.c checks.c \
+			door.c sprite.c render.c texture.c algorithm.c parse_utils.c \
+			mlx_move.c move_protection.c init_textures.c input.c move_utils.c \
+			door_checks.c
 FILES = $(addprefix $(SRC_DIR), $(RAW_FILES))
 OBJ = $(addprefix $(OBJ_DIR), $(RAW_FILES:.c=.o))
 
@@ -22,7 +26,7 @@ libft:
 	@make -C libft
 
 $(NAME): $(OBJ) $(HEADERS)
-	@$(CC) $(FLAGS) $(INCLUDES) -o $(NAME) $(OBJ) $(LIBFT) $(GNL_FILES) -lmlx -framework OpenGL -framework AppKit
+	@$(CC) $(FLAGS) $(INCLUDES) -o $(NAME) $(OBJ) $(LIBFT) $(MLX) $(GNL_FILES) -lmlx -framework OpenGL -framework AppKit
 
 $(OBJ_DIR)%.o: $(SRC_DIR)%.c $(HEADERS)
 	@$(CC) $(FLAGS) $(INCLUDES) -c $< -o $@
