@@ -1,10 +1,11 @@
 CC = cc
-FLAGS = -Wall -Wextra -Werror #-g -fsanitize=address
+FLAGS = -Wall -Wextra -Werror -O3
 INCLUDES = -I ./includes -I ./libft -I ./mlx -I ./gnl
 HEADERS = includes/cub3d.h
 GNL_FILES = gnl/get_next_line.c gnl/get_next_line_utils.c
 LIBFT = libft/libft.a
-MLX = mlx/libmlx.a
+MLX_DIR = mlx/
+MLX = $(MLX_DIR)libmlx.a
 NAME = cub3d
 
 SRC_DIR = src/
@@ -17,7 +18,7 @@ RAW_FILES = main.c draw.c mlx.c parse.c end.c utils.c minimap.c checks.c \
 FILES = $(addprefix $(SRC_DIR), $(RAW_FILES))
 OBJ = $(addprefix $(OBJ_DIR), $(RAW_FILES:.c=.o))
 
-all: libft $(OBJ_DIR) $(NAME)
+all: libft $(MLX) $(OBJ_DIR) $(NAME)
 
 $(OBJ_DIR):
 	@mkdir -p $(OBJ_DIR)
@@ -25,8 +26,11 @@ $(OBJ_DIR):
 libft:
 	@make -C libft
 
+$(MLX): $(MLX_DIR)
+	@make -C $<
+
 $(NAME): $(OBJ) $(HEADERS)
-	@$(CC) $(FLAGS) $(INCLUDES) -o $(NAME) $(OBJ) $(LIBFT) $(MLX) $(GNL_FILES) -lmlx -framework OpenGL -framework AppKit
+	@$(CC) $(FLAGS) $(INCLUDES) -o $(NAME) $(OBJ) $(LIBFT) $(MLX) $(GNL_FILES) -framework OpenGL -framework AppKit
 
 $(OBJ_DIR)%.o: $(SRC_DIR)%.c $(HEADERS)
 	@$(CC) $(FLAGS) $(INCLUDES) -c $< -o $@
@@ -41,4 +45,4 @@ fclean: clean
 
 re: fclean all
 
-.PHONY: all libft clean fclean re
+.PHONY: all libft $(MLX) clean fclean re
